@@ -1,0 +1,133 @@
+<!-- Copyright (c) 2024 Fred Emmott --->
+<!-- SPDX-License-Identifier: MIT -->
+<html>
+  <head>
+    <title>OpenKneeboard Basic Calculator</title>
+  </head>
+<style>
+body {
+  background-color: white;
+  font-family: "Segoe UI";
+  font-size: 12px;
+}
+.page {
+  width: 768px;
+  height: 1024px;
+}
+.dev .page {
+  border: 1px dashed red;
+}
+
+.hidden {
+  display: none;
+}
+.inputGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 64px);
+  grid-auto-rows: 64px;
+  button {
+    font-family: "Segoe UI";
+    font-size: 12px;
+  }
+}
+.opEquals {
+  grid-row: span 2;
+}
+.num0 {
+  grid-column: span 2;
+}
+.bufferContainer {
+  grid-column: span 4;
+  vertical-align: bottom;
+  font-size: 24px;
+  background-color: #cccccc;
+  display: flex;
+  flex-direction: column;
+}
+.buffer, .staging {
+  margin-top: auto;
+  text-align: right;
+  width: 100%;
+}
+.staging {
+  color: #555;
+  font-weight: lighter;
+  font-size: 60%;
+}
+.history {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  font-size: 150%;
+  .historyOperand.lhs {
+    text-align: right;
+  }
+  .historyResult, .historyOperand.rhs {
+    text-align: left;
+  }
+  .historyOp, .historyOperand.rhs {
+    margin-left: 1ch;
+  }
+  .historyResult {
+    margin-left: 2ch;
+    color: #777;
+    font-style: italic;
+  }
+  .historyResult:before {
+    content: "= ";
+  }
+}
+.historyValue:hover {
+  text-decoration: underline;
+}
+
+.mono {
+  font-family: "Cascadia Mono", "Consolas", "Courier New";
+}
+
+
+/* See https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-ui-symbol-font */
+.glyph {
+  font-family: "Segoe MDL2 Assets" !important;
+}
+</style>
+  <body>
+    <div id="pageTemplate" class="page hidden">
+      <div class="history"></div>
+      <div class="inputGrid">
+        <div class="bufferContainer">
+          <div class="staging mono"></div>
+          <div class="buffer mono">0</div>
+        </div>
+
+        <button class="opSqrt glyph">&#xE94B;</button>
+        <button class="opDivide glyph">&#xE94A;</button>
+        <button class="opMultiply glyph">&#xE947;</button>
+        <button class="backspace glyph">&#xE94F;</button>
+
+
+        <button class="num" data-value="7">7</button>
+        <button class="num" data-value="8">8</button>
+        <button class="num" data-value="9">9</button>
+        <button class="opPlus glyph">&#xE948;</button>
+
+        <button class="num" data-value="4">4</button>
+        <button class="num" data-value="5">5</button>
+        <button class="num" data-value="6">6</button>
+        <button class="opMinus glyph">&#xE949;</button>
+
+        <button class="num" data-value="1">1</button>
+        <button class="num" data-value="2">2</button>
+        <button class="num" data-value="3">3</button>
+        <button class="opEquals glyph">&#xE94E;</button>
+
+        <button class="num num0" data-value="0">0</button>
+        <!-- num0 -->
+        <button class="decimal">.</button>
+        <!-- opEquals -->
+      </div>
+    </div>
+    <div id="root">
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
