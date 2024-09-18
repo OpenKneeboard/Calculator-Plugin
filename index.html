@@ -1,13 +1,12 @@
 <!-- Copyright (c) 2024 Fred Emmott --->
 <!-- SPDX-License-Identifier: MIT -->
-<html>
+<html lang="en">
   <head>
     <title>OpenKneeboard Basic Calculator</title>
     <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
     <div id="pageTemplate" class="page hidden">
-      <div class="history"></div>
       <div class="inputGrid">
         <div class="bufferContainer">
           <div class="staging mono"></div>
@@ -40,8 +39,9 @@
         <button class="decimal">.</button>
         <!-- opEquals -->
       </div>
+      <div class="history"></div>
     </div>
-    <div id="root">
+    <div id="pagesRoot">
     </div>
     <script src="script.js"></script>
   </body>

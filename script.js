@@ -1,8 +1,8 @@
 // Copyright (c) 2024 Fred Emmott
 // SPDX-License-Identifier: MIT
 function onNumber(buffer, value) {
-  if (buffer.textContent == '0') {
-    if (value == '0') {
+  if (buffer.textContent === '0') {
+    if (value === '0') {
       return;
     }
     buffer.textContent = value;
@@ -20,34 +20,30 @@ function evalPending(page, history, staging, buffer) {
   let rhs = buffer.textContent;
 
   buffer.textContent = page.nextBinaryOpFn(parseFloat(page.nextLHSOperand), parseFloat(rhs));
-  appendHistory(history, page.nextLHSOperand, page.nextBinaryOpText, rhs, buffer.textContent, buffer);
+  pushHistory(history, page.nextLHSOperand, page.nextBinaryOpText, rhs, buffer.textContent, buffer);
 
   page.nextBinaryOpFn = null;
 }
 
-function appendHistory(history, lhs, op, rhs, result, buffer) {
+function pushHistory(history, lhs, op, rhs, result, buffer) {
   let lhsNode = document.createElement('div');
   lhsNode.textContent = lhs;
   lhsNode.className = "mono historyOperand historyValue lhs";
   lhsNode.setAttribute('data-value', lhs);
-  history.appendChild(lhsNode);
 
   let opNode = document.createElement('div');
   opNode.textContent = op;
   opNode.className = "mono historyOp";
-  history.appendChild(opNode);
 
   let rhsNode = document.createElement('div');
   rhsNode.textContent = rhs;
   rhsNode.className = "mono historyOperand historyValue rhs";
   rhsNode.setAttribute('data-value', rhs);
-  history.appendChild(rhsNode);
 
   let resultNode = document.createElement('div')
   resultNode.textContent = result;
   resultNode.className = "mono historyResult historyValue";
   resultNode.setAttribute('data-value', result);
-  history.appendChild(resultNode);
 
   for (const node of [lhsNode, rhsNode, resultNode]) {
     node.addEventListener(
@@ -55,6 +51,8 @@ function appendHistory(history, lhs, op, rhs, result, buffer) {
       () => buffer.textContent = node.getAttribute('data-value')
     );
   }
+
+  history.prepend(lhsNode, opNode, rhsNode, resultNode);
 }
 
 function onBinaryOp(page, history, staging, buffer, opText, opFn) {
@@ -76,8 +74,8 @@ function onUnaryOp(page, history, staging, buffer, opText, opFn) {
 
   const operand = parseFloat(buffer.textContent);
   buffer.textContent = opFn(operand);
-  if (opText != '=' || !havePending) {
-    appendHistory(history, operand, opText, '', buffer.textContent, buffer);
+  if (opText !== '=' || !havePending) {
+    pushHistory(history, operand, opText, '', buffer.textContent, buffer);
   }
 
   staging.textContent = ""; 
@@ -88,7 +86,7 @@ function appendPage() {
   const page = template.cloneNode(true);
   page.id = crypto.randomUUID();
   page.classList.remove('hidden');
-  document.getElementById('root').appendChild(page);
+  document.getElementById('pagesRoot').appendChild(page);
 
   const history = page.querySelector('.history');
   const buffer = page.querySelector('.buffer');
@@ -104,7 +102,7 @@ function appendPage() {
     'click',
     () => {
       buffer.textContent = buffer.textContent.substring(0, buffer.textContent.length - 1);
-      if (buffer.textContent == '') {
+      if (buffer.textContent === '') {
         buffer.textContent = '0';
       }
     }
