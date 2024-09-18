@@ -1,0 +1,84 @@
+body {
+  background-color: white;
+  font-family: "Segoe UI";
+  font-size: 12px;
+}
+.page {
+  width: 768px;
+  height: 1024px;
+}
+.dev .page {
+  border: 1px dashed red;
+}
+
+.hidden {
+  display: none;
+}
+.inputGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 64px);
+  grid-auto-rows: 64px;
+  button {
+    font-family: "Segoe UI";
+    font-size: 12px;
+  }
+}
+.opEquals {
+  grid-row: span 2;
+}
+.num0 {
+  grid-column: span 2;
+}
+.bufferContainer {
+  grid-column: span 4;
+  vertical-align: bottom;
+  font-size: 24px;
+  background-color: #cccccc;
+  display: flex;
+  flex-direction: column;
+}
+.buffer, .staging {
+  margin-top: auto;
+  text-align: right;
+  width: 100%;
+}
+.staging {
+  color: #555;
+  font-weight: lighter;
+  font-size: 60%;
+}
+.history {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  font-size: 150%;
+  .historyOperand.lhs {
+    text-align: right;
+  }
+  .historyResult, .historyOperand.rhs {
+    text-align: left;
+  }
+  .historyOp, .historyOperand.rhs {
+    margin-left: 1ch;
+  }
+  .historyResult {
+    margin-left: 2ch;
+    color: #777;
+    font-style: italic;
+  }
+  .historyResult:before {
+    content: "= ";
+  }
+}
+.historyValue:hover {
+  text-decoration: underline;
+}
+
+.mono {
+  font-family: "Cascadia Mono", "Consolas", "Courier New";
+}
+
+
+/* See https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-ui-symbol-font */
+.glyph {
+  font-family: "Segoe MDL2 Assets" !important;
+}
