@@ -56,7 +56,6 @@ function pushHistory(history, lhs, op, rhs, result, buffer) {
 }
 
 function onBinaryOp(page, history, staging, buffer, opText, opFn) {
-  let operand = buffer.textContent;
   evalPending(page, history, staging, buffer);
 
   page.nextBinaryOpText = opText;
