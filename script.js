@@ -34,6 +34,8 @@ class PageUI {
     this.#historyNode = node.querySelector('.history');
   }
 
+  mutated = false;
+
   pendingBinaryOp = null;
   pendingBinaryLHS = null;
 
@@ -93,8 +95,10 @@ class PageUI {
   }
 }
 
-function onNumber(page, value, sendToPeers = true) {
-  if (sendToPeers && window.OpenKneeboard?.SendMessageToPeers) {
+function onNumber(page, value, isOriginInstance = true) {
+  onMutate(page, isOriginInstance);
+
+  if (isOriginInstance && window.OpenKneeboard?.SendMessageToPeers) {
     OpenKneeboard.SendMessageToPeers({
       kind: 'number',
       sender: instanceId,
@@ -199,23 +203,19 @@ function onUnaryOp(page, op) {
   page.staging = "";
 }
 
-function appendPage() {
-  const id = crypto.randomUUID();
-  return appendPageWithID(id);
-}
-
-function appendPageWithID(id) {
+function appendPage(id = crypto.randomUUID()) {
   const template = document.getElementById('pageTemplate');
   const page = template.cloneNode(true);
   page.id = id;
-  page.classList.remove('hidden');
+  page.classList.add('page');
   document.getElementById('pagesRoot').appendChild(page);
   attachJSToPage(page);
   return page;
 }
 
-function onOp(page, op, sendToPeers= true) {
-  if (sendToPeers && window.OpenKneeboard?.SendMessageToPeers) {
+function onOp(page, op, isOriginInstance= true) {
+  onMutate(page, isOriginInstance);
+  if (isOriginInstance && window.OpenKneeboard?.SendMessageToPeers) {
     OpenKneeboard.SendMessageToPeers({
       kind: 'op',
       sender: instanceId,
@@ -269,7 +269,7 @@ async function initializeNewOpenKneeboardTab() {
 
 async function initializeExistingOpenKneeboardTab(pages) {
   for (const page of pages) {
-    appendPageWithID(page.guid);
+    appendPage(page.guid);
   }
   instanceKind = InstanceKind.Additional;
 
@@ -282,10 +282,6 @@ async function initializeExistingOpenKneeboardTab(pages) {
 async function sendBootstrapData(sender) {
   let response = {};
   for (const node of document.querySelectorAll('.page')) {
-    if (node.id === 'pageTemplate') {
-      continue;
-    }
-
     const page = node.okbCalculator;
     let pageData = {
       id: page.id,
@@ -313,8 +309,35 @@ async function sendBootstrapData(sender) {
   });
 }
 
-function onBackspace(page, sendToPeers = true) {
-  if (sendToPeers && window.OpenKneeboard?.SendMessageToPeers) {
+function onMutate(page, isOriginInstance) {
+  if (page.mutated) {
+    return;
+  }
+  page.mutated = true;
+
+  if (!isOriginInstance) {
+    return;
+  }
+
+  const newPage = appendPage();
+  if (!window.OpenKneeboard?.SendMessageToPeers) {
+    return;
+  }
+
+  OpenKneeboard.SendMessageToPeers({
+    kind: 'appendPage',
+    sender: instanceId,
+    page: newPage.id,
+  });
+
+  OpenKneeboard.SetPages(
+    Array.from(document.getElementsByClassName('page')).map((node) => {
+      return {guid: node.id, pixelSize: {width: 768, height: 1024}};
+    }));
+}
+
+function onBackspace(page, isOriginInstance = true) {
+  if (isOriginInstance && window.OpenKneeboard?.SendMessageToPeers) {
     OpenKneeboard.SendMessageToPeers({
       kind: 'backspace',
       sender: instanceId,
@@ -325,8 +348,8 @@ function onBackspace(page, sendToPeers = true) {
   page.buffer =  page.buffer.substring(0, page.buffer.length - 1);
 }
 
-function setBuffer(page, value, sendToPeers = true) {
-  if (sendToPeers && window.OpenKneeboard?.SendMessageToPeers) {
+function setBuffer(page, value, isOriginInstance = true) {
+  if (isOriginInstance && window.OpenKneeboard?.SendMessageToPeers) {
     OpenKneeboard.SendMessageToPeers({
       kind: 'setBuffer',
       sender: instanceId,
@@ -385,6 +408,9 @@ async function onPeerMessage(ev) {
     case 'setBuffer':
       setBuffer(document.getElementById(message.page).okbCalculator, message.value, false);
       return;
+    case 'appendPage':
+      appendPage(message.page);
+      return;
   }
 
   if (instanceKind !== InstanceKind.First) {
@@ -398,8 +424,17 @@ async function onPeerMessage(ev) {
   }
 }
 
+function onPageChanged(ev) {
+  const id= ev.detail.page.guid;
+  for (const node of document.getElementsByClassName('page')){
+    console.log('onPageChanged', node, node.id, id);
+    node.classList.toggle('hidden', node.id !== id);
+  }
+}
+
 async function initOpenKneeboard() {
   OpenKneeboard.addEventListener('peerMessage', onPeerMessage);
+  OpenKneeboard.addEventListener('pageChanged', onPageChanged);
   await OpenKneeboard.EnableExperimentalFeature("PageBasedContent", 2024073001);
 
   const pages = await OpenKneeboard.GetPages();
@@ -410,10 +445,12 @@ async function initOpenKneeboard() {
   }
 
   document.body.classList.add('OpenKneeboard');
+  console.log(document.querySelector('.page'));
+  document.querySelector('.page').classList.remove('hidden');
 }
 
 initOpenKneeboard().catch(() => {
   instanceKind = InstanceKind.Standalone;
   document.body.classList.add('fallbackUI');
-  appendPage();
+  appendPage().classList.remove('hidden');
 });
