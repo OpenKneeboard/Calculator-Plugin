@@ -13,16 +13,16 @@ function onNumber(buffer, value) {
 }
 
 function evalPending(page, history, staging, buffer) {
-  if (!page.nextBinaryOpFn) {
+  const op = page.nextBinaryOp;
+  if (!op) {
     return;
   }
+  page.nextBinaryOp = null;
 
   let rhs = buffer.textContent;
 
-  buffer.textContent = page.nextBinaryOpFn(parseFloat(page.nextLHSOperand), parseFloat(rhs));
-  pushHistory(history, page.nextLHSOperand, page.nextBinaryOpText, rhs, buffer.textContent, buffer);
-
-  page.nextBinaryOpFn = null;
+  buffer.textContent = op.invoke(parseFloat(page.nextLHSOperand), parseFloat(rhs));
+  pushHistory(history, page.nextLHSOperand, op.label, rhs, buffer.textContent, buffer);
 }
 
 function pushHistory(history, lhs, op, rhs, result, buffer) {
@@ -55,41 +55,113 @@ function pushHistory(history, lhs, op, rhs, result, buffer) {
   history.prepend(lhsNode, opNode, rhsNode, resultNode);
 }
 
-function onBinaryOp(page, history, staging, buffer, opText, opFn) {
+class Op {
+  #label;
+
+  constructor(label) {
+    this.#label = label;
+  }
+
+  get label() {
+    return this.#label;
+  }
+}
+
+class BinaryOp extends Op {
+  #fn;
+  constructor(label, fn) {
+    super(label);
+    this.#fn = fn;
+  }
+
+  invoke(a, b) {
+    return this.#fn(a, b);
+  }
+}
+
+const BinaryOps = {
+  Plus: new BinaryOp('+', (a, b) => a + b),
+  Minus: new BinaryOp('-', (a, b) => a - b),
+  Multiply: new BinaryOp('×', (a, b) => a * b),
+  Divide: new BinaryOp("÷", (a, b) => a / b),
+};
+
+function onBinaryOp(page, history, staging, buffer, op) {
   evalPending(page, history, staging, buffer);
 
-  page.nextBinaryOpText = opText;
-  page.nextBinaryOpFn = opFn;
+  page.nextBinaryOp = op;
   page.nextLHSOperand = buffer.textContent;
 
-  staging.textContent = `${buffer.textContent} ${opText}`;
+  staging.textContent = `${buffer.textContent} ${op.label}`;
 
   buffer.textContent = "0";
 }
 
-function onUnaryOp(page, history, staging, buffer, opText, opFn) {
-  const havePending = !!page.nextBinaryOpFn;
+class UnaryOp extends Op {
+  #fn;
+  constructor(label, fn) {
+    super(label);
+    this.#fn = fn;
+  }
+
+  invoke(x) {
+    return this.#fn(x);
+  }
+}
+
+const UnaryOps = {
+  Equals: new UnaryOp('=', (x) => x),
+  Sqrt: new UnaryOp('√', Math.sqrt),
+};
+
+function onUnaryOp(page, history, staging, buffer, op) {
+  const havePending = !!page.nextBinaryOp;
   evalPending(page, history, staging, buffer);
 
   const operand = parseFloat(buffer.textContent);
-  buffer.textContent = opFn(operand);
-  if (opText !== '=' || !havePending) {
-    pushHistory(history, operand, opText, '', buffer.textContent, buffer);
+  buffer.textContent = op.invoke(operand);
+  if (op.label !== '=' || !havePending) {
+    pushHistory(history, operand, op.label, '', buffer.textContent, buffer);
   }
 
   staging.textContent = ""; 
 }
 
 function appendPage() {
+  const id = crypto.randomUUID();
+  appendPageWithID(id);
+}
+
+function appendPageWithID(id) {
   const template = document.getElementById('pageTemplate');
   const page = template.cloneNode(true);
-  page.id = crypto.randomUUID();
+  page.id = id;
   page.classList.remove('hidden');
   document.getElementById('pagesRoot').appendChild(page);
+  attachJSToPage(page);
+}
 
+function onOp(page, op, sendToPeers= true) {
   const history = page.querySelector('.history');
   const buffer = page.querySelector('.buffer');
   const staging = page.querySelector('.staging');
+
+  if (op in BinaryOps) {
+    onBinaryOp(page, history, staging, buffer, BinaryOps[op]);
+    return;
+  }
+
+  if (op in UnaryOps) {
+    onUnaryOp(page, history, staging, buffer, UnaryOps[op]);
+    return;
+  }
+
+  // Should be unreachable - all ops should either be a binary op or an unary op
+  debugger;
+}
+
+function attachJSToPage(page) {
+  const buffer = page.querySelector('.buffer');
 
   for(const button of page.querySelectorAll("button.num")) {
     button.addEventListener('click', () => {
@@ -107,31 +179,12 @@ function appendPage() {
     }
   );
 
-  page.querySelector('.opPlus').addEventListener(
-    'click',
-    () => onBinaryOp(page, history, staging, buffer, "+", (a, b) => a + b)
-  );
-  page.querySelector('.opMinus').addEventListener(
-    'click',
-    () => onBinaryOp(page, history, staging, buffer, "-", (a, b) => a - b)
-  );
-  page.querySelector('.opMultiply').addEventListener(
-    'click',
-    () => onBinaryOp(page, history, staging, buffer, "×", (a, b) => a * b)
-  );
-  page.querySelector('.opDivide').addEventListener(
-    'click',
-    () => onBinaryOp(page, history, staging, buffer, "÷", (a, b) => a / b)
-  );
-
-  page.querySelector('.opEquals').addEventListener(
-    'click',
-    () => onUnaryOp(page, history, staging, buffer, '=', (x) => x)
-  );
-  page.querySelector('.opSqrt').addEventListener(
-    'click',
-    () => onUnaryOp(page, history, staging, buffer, '√', (x) => Math.sqrt(x))
-  );
+  for(const op of ['Plus', 'Minus', 'Multiply', 'Divide', 'Equals', 'Sqrt']) {
+    page.querySelector(`.op${op}`).addEventListener(
+      'click',
+      () => onOp(page, op)
+    );
+  }
 }
 
 if (!window.OpenKneeboard) {
