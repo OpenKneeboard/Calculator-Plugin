@@ -1,0 +1,20 @@
+{
+	"ID": "calculator.openkneeboard.com",
+	"Metadata": {
+		"PluginName": "Calculator",
+		"PluginReadableVersion": "0.0.1",
+		"PluginSemanticVersion": "0.0.1",
+		"OKBMinimumVersion": "1.9.8",
+		"OKBMaximumTestedVersion": "1.9.9"
+	},
+	"TabTypes": [
+		{
+			"ID": "calculator.openkneeboard.com;Basic",
+			"Name": "Basic Calculator",
+			"Implementation": "WebBrowser",
+			"ImplementationArgs": {
+				"URI": "plugin://index.html"
+			}
+		}
+	]
+}
