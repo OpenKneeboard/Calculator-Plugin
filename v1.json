@@ -4,7 +4,7 @@
 		"PluginName": "Calculator",
 		"PluginReadableVersion": "0.0.1",
 		"PluginSemanticVersion": "0.0.1",
-		"OKBMinimumVersion": "1.9.8",
+		"OKBMinimumVersion": "1.9.9",
 		"OKBMaximumTestedVersion": "1.9.9"
 	},
 	"TabTypes": [
