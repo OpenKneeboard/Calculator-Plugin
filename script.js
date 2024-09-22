@@ -427,7 +427,6 @@ async function onPeerMessage(ev) {
 function onPageChanged(ev) {
   const id= ev.detail.page.guid;
   for (const node of document.getElementsByClassName('page')){
-    console.log('onPageChanged', node, node.id, id);
     node.classList.toggle('hidden', node.id !== id);
   }
 }
@@ -445,7 +444,6 @@ async function initOpenKneeboard() {
   }
 
   document.body.classList.add('OpenKneeboard');
-  console.log(document.querySelector('.page'));
   document.querySelector('.page').classList.remove('hidden');
 }
 
