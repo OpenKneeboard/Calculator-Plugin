@@ -2,11 +2,9 @@
 
 This is a basic calculator for [OpenKneeboard](https://openkneeboard.com); it also serves as a sample OpenKneeboard plugin.
 
-OpenKneeboard v1.9.9 or above is **required**; as of 2024-09-19, the latest release is v1.9.8, which is not capable of running this plugin.
-
 ## Installation
 
-1. Install a new enough version of OpenKneeboard; as of 2024-09-19, this requires a development build of OpenKneeboard
+1. Install OpenKneeboard
 2. Download `Calculator.OpenKneeboardPlugin` from [the latest release](https://github.com/OpenKneeboard/calculator/releases/latest)
 3. Double-click it to launch the plugin installer in OpenKneeboard
 
